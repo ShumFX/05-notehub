@@ -1,4 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { type AxiosResponse } from 'axios';
+
 import type { Note, CreateNotePayload } from '../types/note';
 
 const BASE_URL = 'https://notehub-public.goit.study/api';
