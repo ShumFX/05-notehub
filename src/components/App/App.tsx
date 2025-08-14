@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
-import { fetchNotes, createNote, deleteNote } from '../../services/noteService';
-import type { CreateNotePayload } from '../../types/note';
+import { fetchNotes } from '../../services/noteService';
 import NoteList from '../NoteList/NoteList';
 import SearchBox from '../SearchBox/SearchBox';
 import Pagination from '../Pagination/Pagination';
@@ -16,7 +15,6 @@ const App: React.FC = () => {
   const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
   const perPage = 12;
 
   const {
@@ -28,24 +26,9 @@ const App: React.FC = () => {
     queryFn: () => fetchNotes({ 
       page: currentPage, 
       perPage,
-      search: debouncedSearchQuery 
+      search: debouncedSearchQuery.trim() || undefined 
     }),
     placeholderData: (previousData) => previousData,
-  });
-
-  const createNoteMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      setIsModalOpen(false);
-    },
-  });
-
-  const deleteNoteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-    },
   });
 
   const handlePageChange = (selectedPage: number) => {
@@ -55,14 +38,6 @@ const App: React.FC = () => {
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const handleCreateNote = (payload: CreateNotePayload) => {
-    createNoteMutation.mutate(payload);
-  };
-
-  const handleDeleteNote = (id: string) => {
-    deleteNoteMutation.mutate(id);
   };
 
   const handleOpenModal = () => {
@@ -111,20 +86,12 @@ const App: React.FC = () => {
       </header>
 
       {hasNotes && (
-        <NoteList 
-          notes={notes}
-          onDelete={handleDeleteNote}
-          isDeleting={deleteNoteMutation.isPending}
-        />
+        <NoteList notes={notes} />
       )}
 
       {isModalOpen && (
         <Modal onClose={handleCloseModal}>
-          <NoteForm
-            onSubmit={handleCreateNote}
-            onCancel={handleCloseModal}
-            isSubmitting={createNoteMutation.isPending}
-          />
+          <NoteForm onCancel={handleCloseModal} />
         </Modal>
       )}
     </div>
