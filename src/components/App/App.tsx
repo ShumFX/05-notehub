@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from 'use-debounce';
 import { fetchNotes, createNote, deleteNote } from '../../services/noteService';
 import type { CreateNotePayload } from '../../types/note';
@@ -30,6 +30,7 @@ const App: React.FC = () => {
       perPage,
       search: debouncedSearchQuery 
     }),
+    placeholderData: (previousData) => previousData,
   });
 
   const createNoteMutation = useMutation({

@@ -1,4 +1,6 @@
 import React from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteNote } from '../../services/noteService';
 import type { Note } from '../../types/note';
 import css from './NoteList.module.css';
 
@@ -9,6 +11,20 @@ interface NoteListProps {
 }
 
 const NoteList: React.FC<NoteListProps> = ({ notes, onDelete, isDeleting }) => {
+  const queryClient = useQueryClient();
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: deleteNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteNoteMutation.mutate(id);
+    onDelete(id); // Также вызываем родительский хендлер для консистентности
+  };
+
   return (
     <ul className={css.list}>
       {notes.map((note) => (
@@ -19,10 +35,10 @@ const NoteList: React.FC<NoteListProps> = ({ notes, onDelete, isDeleting }) => {
             <span className={css.tag}>{note.tag}</span>
             <button 
               className={css.button}
-              onClick={() => onDelete(note.id)}
-              disabled={isDeleting}
+              onClick={() => handleDelete(note.id)}
+              disabled={isDeleting || deleteNoteMutation.isPending}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {(isDeleting || deleteNoteMutation.isPending) ? 'Deleting...' : 'Delete'}
             </button>
           </div>
         </li>
